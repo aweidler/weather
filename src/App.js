@@ -6,25 +6,20 @@ import DetailChart from './DetailChart';
 import data from './data.json';
 
 import * as d3 from 'd3';
+import Navigation from "./Navigation";
+import Info from "./Info";
 
 require('normalize.css');
-
-var PAGES = {
-    detail: 'detail',
-    overview: 'overview',
-    front: 'front',
-};
 
 class App extends Component {
 
     constructor(){
         super();
 
+        this.PAGES = Navigation.GetPages();
+
         this.minDate = new Date('2014-01-02');
         this.maxDate = new Date('2015-01-01');
-
-        this.subMinDate = new Date('2014-01-02');
-        this.subMaxDate = new Date('2014-02-02');
 
         let hash = window.location.hash.substr(1);
         let hashes = hash.split('/');
@@ -33,8 +28,9 @@ class App extends Component {
             params.push(hashes[i]);
         }
         this.state = {
-            page: hashes[0] ? hashes[0] : PAGES.front,
+            page: hashes[0] ? hashes[0] : this.PAGES.front,
             params: params,
+            domain: [new Date('2014-01-02'), new Date('2014-02-02')],
         };
 
         // filter our data
@@ -43,6 +39,7 @@ class App extends Component {
             let seg = data[i];
             let curdate = new Date(seg.curdate);
             if(this.minDate <= curdate && this.maxDate > curdate){
+                seg.date = curdate;
                 realdata[i] = seg;
             }
         }
@@ -64,16 +61,49 @@ class App extends Component {
         };
     }
 
-    errorTitle(){
-        let formatTime = d3.timeFormat("%Y");
+    static getDays(){
+        return ["\"Today\"", "\"Tomorrow\"", "+2 Days", "+3 Days"];
+    }
 
-        return "Temperature Forecast Errors For " + formatTime(this.minDate);
+    errorTitle(){
+        if(this.state.params.length){
+            let formatTime = d3.timeFormat("%b %e");
+            return formatTime(this.state.domain[0]) + " - " + formatTime(this.state.domain[1]) + " Temperature Forecast Errors"
+        }
+        else {
+            let formatTime = d3.timeFormat("%Y");
+            return formatTime(this.minDate) + " Temperature Forecast Errors";
+        }
+    }
+
+    static errorInfo(){
+        return "For both <span class='high'>High</span> and <span class='low'>Low</span> " +
+        "temperatures the amount of errors increases as forecasts are made further into the future. " +
+            "An error is calculated by the number of degrees fahrenheit (°F) from the observed value for the day. " +
+            "<strong>Click</strong> on a column to see more details.";
+    }
+
+    static detailInfo(){
+        return "Presented is the breakdown of how temperature errors accumulate. " +
+            "As time moves forward, more errors will occur. Using the <strong>slider</strong>, " +
+            "see if you can determine what months <span class='low'>Low</span> errors are higher. " +
+            "You can also choose to see the different breakdowns by selecting " +
+            "columns in the Temperature Forecast Errors chart.";
+    }
+
+    detailTitle(){
+        let days = App.getDays();
+        return days[this.state.params[0]] + " Forecasted " + this.state.params[1] + " Temperature Details";
+    }
+
+    brushed(dim){
+        this.setState({domain: dim});
     }
 
     sendTo(page){
         let pages = page.split('/');
 
-        if(PAGES.hasOwnProperty(pages[0])) {
+        if(this.PAGES.hasOwnProperty(pages[0])) {
             let pageinfo = { page: pages[0], params:[] };
             for(let i=1; i<pages.length; i++){
                 pageinfo.params.push(pages[i]);
@@ -89,14 +119,15 @@ class App extends Component {
         }
         else{
             this.setState({
-                page: PAGES.front,
+                page: this.PAGES.front,
             });
         }
     }
 
     render() {
         return (<div className='App'>
-            { this.state.page === PAGES.front &&
+            <Navigation title={this.title} author={this.author} sendTo={this.sendTo.bind(this)} page={this.state.page} />
+            { this.state.page === this.PAGES.front &&
                 <Overlay title={this.title}
                      subtitle={"By " + this.author}
                      description={this.description}
@@ -104,22 +135,29 @@ class App extends Component {
                 />
             }
 
-            { this.state.page === PAGES.overview &&
+            { this.state.page === this.PAGES.overview &&
                 <ErrorBarChart title={this.errorTitle()}
-                           data={this.data}
-                           sendTo={this.sendTo.bind(this)}
+                               info={App.errorInfo()}
+                               days={App.getDays()}
+                               data={this.data}
+                               sendTo={this.sendTo.bind(this)}
                 />
             }
 
-            { this.state.page === PAGES.detail &&
+            { this.state.page === this.PAGES.detail &&
                 <div className="inliner">
+                    <Info info={App.detailInfo()} />
                     <ErrorBarChart title={this.errorTitle()}
                                    data={this.data}
+                                   days={App.getDays()}
                                    params={this.state.params}
+                                   domain={this.state.domain}
                                    sendTo={this.sendTo.bind(this)}
                     />
-                    <DetailChart data={this.data}
+                    <DetailChart title={this.detailTitle()}
+                                 data={this.data}
                                  params={this.state.params}
+                                 onBrush={this.brushed.bind(this)}
                     />
                 </div>
             }

@@ -3,29 +3,120 @@
     font-family: 'Source Sans Pro', sans-serif;
 }
 
-html, body, #root, .App{
+html, body, #root{
     height: 100%;
+    background-color: #efefef;
+}
+
+.App{
+    height: 100%;
+    background-color: #efefef;
+    padding-top: 30px;
+    box-sizing: border-box;
+}
+
+.low{
+    color: #1b8dc6;
+}
+.high{
+    color: #ff3126;
+}
+
+.navigation{
+    top: 0;
+    width: 100%;
+    overflow: hidden;
+    background: #333;
+    text-align: center;
+    height: 30px;
+    position: fixed;
+}
+
+.navigation .title{
+    position: absolute;
+    left: 8px;
+    top: 5px;
+    color: white;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.navigation .author{
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    color: white;
+}
+
+.navigation a{
+    position: relative;
+    z-index: 2;
+    display:inline-block;
+    width: 20px;
+    height: 20px;
+    background: #ccc;
+    color: #ccc;
+    margin: 5px;
+    box-sizing: border-box;
+    border-radius: 1px;
+    border: 1px solid black;
+    overflow: hidden;
+    text-align: center;
+    cursor: pointer;
+    font-size: 15px;
+
+    transition: color 0.3s, background 0.3s;
+}
+.navigation a.active, .navigation a:hover{
+    background: #eee;
+    color: #333;
+}
+
+.chart-info{
+    text-align: left;
+    white-space: normal;
+    max-width: 800px;
+    margin: auto;
+}
+.chart-info button{
+    width: 100%;
+    height: 16px;
+    padding: 4px;
+    font-size: 12px;
+    vertical-align: middle;
+    border-radius: 1px;
+    position: relative;
+}
+.chart-info button i{
+    position: absolute;
+    top: 1px;
+    right: 40px;
+}
+.chart-info button span{
+    position: absolute;
+    top: 0px;
+    font-size: 12px;
+    margin-left: 20px;
+    right: 8px;
 }
 
 .inliner{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    height: 100%;
-    justify-content: center;
-    background-color: #efefef;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.inliner > div{
+    display: inline-block;
 }
 
 .chart{
-    background-color: #efefef;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    text-align: center;
     align-items: center;
-    height: 100%;
+    height: calc(100% - 40px);
     min-height: 600px;
     min-width: 800px;
-    margin: 0 20px;
+    margin: 20px 20px;
+    box-sizing: border-box;
 }
 
 .chart svg{
@@ -41,6 +132,11 @@ html, body, #root, .App{
     pointer-events: none;
 }
 
+.day text{
+    color: black;
+    pointer-events: none;
+}
+
 div.tooltip {
     position: absolute;
     text-align: center;
@@ -51,6 +147,7 @@ div.tooltip {
     font-size: 10pt;
     border-radius: 2px;
     pointer-events: none;
+    display: none;
 }
 
 .zoom {
@@ -61,14 +158,6 @@ div.tooltip {
 
 .selectable{
     cursor: pointer;
-}
-
-.bar {
-  fill: steelblue;
-}
-
-.bar:hover {
-  fill: brown;
 }
 
 .axis--x path {

@@ -3,7 +3,6 @@
  */
 
 import React, {Component} from 'react';
-import './DetailChart.css';
 import * as d3 from 'd3';
 
 class DetailChart extends Component{
@@ -12,14 +11,16 @@ class DetailChart extends Component{
         super(props);
 
         this.size = {width:800, height:600};
-        this.margin = {top: 10, right: 10, bottom: 100, left: 60};
+        this.margin = {top: 60, right: 10, bottom: 100, left: 60};
         this.submargin = {top: 530, right: 10, bottom: 30, left: 60};
 
         this.svgwidth = +this.size.width - this.margin.left - this.margin.right;
         this.svgheight = +this.size.height - this.margin.top - this.margin.bottom;
         this.subsvgheight = +this.size.height - this.submargin.top - this.submargin.bottom;
 
-        this.createDetailChart = this.createDetailChart.bind(this);
+        this.brush = [0, 50];
+        this.animate = true;
+        this.brusher = null;
     }
 
     calculateLine(){
@@ -42,11 +43,21 @@ class DetailChart extends Component{
         return this.props.params[1].toLowerCase() === 'high';
     }
 
+    componentWillUnmount(){
+        if(this.brusher){
+            this.brusher.interrupt();
+        }
+    }
+
     componentDidMount() {
         this.createDetailChart();
     }
 
-    componentDidUpdate() {
+    shouldComponentUpdate(nextProps) {
+        return nextProps.params !== this.props.params;
+    }
+
+    componentDidUpdate(){
         this.createDetailChart();
     }
 
@@ -111,10 +122,13 @@ class DetailChart extends Component{
         let context = svg.append("g")
             .attr("transform", "translate(" + this.submargin.left + "," + this.submargin.top + ")");
 
-        x.domain(d3.extent(lineData, function(d) { return d.date; }));
+        let dateExtent = d3.extent(lineData, function(d) { return d.date; });
+        x.domain(dateExtent);
         y.domain(d3.extent(lineData, function(d) { return d.observed; }));
         x2.domain(x.domain());
         y2.domain(y.domain());
+
+        // brush.extent([new Date(dateExtent[1]), new Date(dateExtent[10])]);
 
         // Tooltip
         d3.selectAll("div.tooltip").remove();
@@ -143,7 +157,7 @@ class DetailChart extends Component{
             .attr("class", "axis axis--y")
             .call(yAxis)
             .append("text")
-            .attr("x", -this.svgwidth/2 + 30)
+            .attr("x", -this.svgwidth/2 + 60)
             .attr("y", -36)
             .attr("fill", "#000")
             .attr("font-weight", "bold")
@@ -166,17 +180,24 @@ class DetailChart extends Component{
             .attr("transform", "translate(0," + this.subsvgheight + ")")
             .call(xAxis2);
 
-        context.append("g")
-            .attr("class", "brush")
-            .call(brush)
-            .call(brush.move, x.range());
-
         focus.append("rect")
             .attr("class", "zoom")
             .attr("width", this.svgwidth)
             .attr("height", this.svgheight)
             .call(zoom);
 
+        this.brusher = context.append("g")
+            .attr("class", "brush")
+            .call(brush)
+            .call(brush.move, this.brush);
+
+        if(this.animate) {
+            this.brusher.transition()
+                .duration(60000)
+                .ease(d3.easeLinear)
+                .call(brush.move, [0, this.svgwidth]);
+            this.animate = false;
+        }
 
         focus.selectAll(".pline")
             .data(lineData)
@@ -208,10 +229,14 @@ class DetailChart extends Component{
                 me.transition()
                     .duration(100)
                     .attr('r', 8);
-                div.transition()
+                div.style("display", "block")
+                    .transition()
                     .duration(100)
                     .style("opacity", .9);
-                div.html("<b>" + formatTime(d.date) + "</b><br/> Forecasted: " + d.forecasted + "<br/> Observed: " + d.observed)
+                div.html("<b>" + formatTime(d.date)
+                    + "</b><br/> Observed: " + d.observed
+                    + "<br/> Forecasted: " + d.forecasted
+                    + "<br/> Error: " + Math.abs(d.observed - d.forecasted))
                     .style("left", (d3.event.pageX - div.node().getBoundingClientRect().width/2) + "px")
                     .style("top", (d3.event.pageY - div.node().getBoundingClientRect().height - 10) + "px")
                     .style("border", "1px solid " + (self.isHigh() ? "#ffa9a5" : "#9bd5f2") );
@@ -237,10 +262,47 @@ class DetailChart extends Component{
             .attr("cx", function(d) { return x(d.date); })
             .attr("cy", function(d) { return y(d.forecasted); });
 
+        // Legend
+        let boxscale = 20;
+        var legend = svg.append("g")
+            .selectAll("g")
+            .data(["Observed", "Forecasted"])
+            .enter().append("g")
+            .attr("transform", function(d, i) { return "translate(0," + i * (boxscale + 8) + ")"; });
+
+        legend.append("circle")
+            .attr("stroke", "black")
+            .attr("cx", this.size.width - boxscale - 70)
+            .attr("cy", this.margin.top)
+            .attr("stroke-width", function(d){ return d === "Observed" ? 0.5 : 1.0; } )
+            .attr("r", function(d){return (d === "Observed" ? 4 : 2); } )
+            .attr("fill", function(d){ return (d === "Observed" ? (self.isHigh() ? "#ffa9a5" : "#9bd5f2") : "white"  )  });
+        legend.append("text")
+            .attr("x", this.svgwidth - 10)
+            .attr("y", this.margin.top + 2)
+            .attr("width", boxscale)
+            .attr("height", boxscale)
+            .attr("text-anchor", "start")
+            .attr("alignment-baseline", "middle")
+            .text(function(d) { return d; });
+
+        // Title
+        svg.append("text")
+            .attr("x", (this.size.width / 2))
+            .attr("y", 30)
+            .attr("text-anchor", "middle")
+            .style("font-size", "16pt")
+            .style("font-weight", "bold")
+            .text(this.props.title);
+
         function brushed() {
             if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
+
             var s = d3.event.selection || x2.range();
             x.domain(s.map(x2.invert, x2));
+            if(this.brusher) {
+                d3.select(this.brusher).interrupt();
+            }
 
             focus.selectAll(".dot")
                 .attr("cx", function(d) { return x(d.date); })
@@ -261,12 +323,22 @@ class DetailChart extends Component{
             svg.select(".zoom").call(zoom.transform, d3.zoomIdentity
                 .scale(self.svgwidth / (s[1] - s[0]))
                 .translate(-s[0], 0));
+
+            self.brush = s;
+
+            if(typeof self.props.onBrush === 'function') {
+                self.props.onBrush(x.domain());
+            }
         }
 
         function zoomed() {
             if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return; // ignore zoom-by-brush
             var t = d3.event.transform;
             x.domain(t.rescaleX(x2).domain());
+            if(this.brusher) {
+                d3.select(this.brusher).interrupt();
+            }
+
             focus.selectAll(".dot")
                 .attr("cx", function(d) { return x(d.date); })
                 .attr("cy", function(d) { return y(d.observed); });
@@ -283,7 +355,14 @@ class DetailChart extends Component{
             focus.select(".line").attr("d", line);
             focus.select(".axis--x").call(xAxis);
 
-            context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
+            let brushSel = x.range().map(t.invertX, t);
+
+            context.select(".brush").call(brush.move, brushSel);
+
+            self.brush = brushSel;
+            if(typeof self.props.onBrush === 'function') {
+                self.props.onBrush(x.domain());
+            }
         }
 
     }

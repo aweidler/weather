@@ -5,6 +5,7 @@
 import React, {Component} from 'react';
 import './App.css';
 import * as d3 from 'd3';
+import Info from "./Info";
 
 class ErrorBarChart extends Component {
     constructor(props) {
@@ -19,10 +20,11 @@ class ErrorBarChart extends Component {
     }
 
     getWidth(){
-        return (this.props.params ? 400 : 800);
+        return (this.props.params ? 450 : 800);
     }
 
     calculateError(){
+        let self = this;
         let base = 10;
 
         let errors = {
@@ -37,23 +39,26 @@ class ErrorBarChart extends Component {
         };
 
         this.props.data.forEach(function(row){
-            let lowbase = parseInt(row.observed_low, base);
-            let highbase = parseInt(row.observed_high, base);
+            if(!self.props.domain
+                || (self.props.domain[0] <= row.date && self.props.domain[1] >= row.date)) {
+                let lowbase = parseInt(row.observed_low, base);
+                let highbase = parseInt(row.observed_high, base);
 
-            errors.low0 += Math.abs(parseInt(row.temperature_0_low, base) - lowbase);
-            errors.low1 += Math.abs(parseInt(row.temperature_1_low, base) - lowbase);
-            errors.low2 += Math.abs(parseInt(row.temperature_2_low, base) - lowbase);
-            errors.low3 += Math.abs(parseInt(row.temperature_3_low, base) - lowbase);
+                errors.low0 += Math.abs(parseInt(row.temperature_0_low, base) - lowbase);
+                errors.low1 += Math.abs(parseInt(row.temperature_1_low, base) - lowbase);
+                errors.low2 += Math.abs(parseInt(row.temperature_2_low, base) - lowbase);
+                errors.low3 += Math.abs(parseInt(row.temperature_3_low, base) - lowbase);
 
-            errors.high0 += Math.abs(parseInt(row.temperature_0_high, base) - highbase);
-            errors.high1 += Math.abs(parseInt(row.temperature_1_high, base) - highbase);
-            errors.high2 += Math.abs(parseInt(row.temperature_2_high, base) - highbase);
-            errors.high3 += Math.abs(parseInt(row.temperature_3_high, base) - highbase);
+                errors.high0 += Math.abs(parseInt(row.temperature_0_high, base) - highbase);
+                errors.high1 += Math.abs(parseInt(row.temperature_1_high, base) - highbase);
+                errors.high2 += Math.abs(parseInt(row.temperature_2_high, base) - highbase);
+                errors.high3 += Math.abs(parseInt(row.temperature_3_high, base) - highbase);
+            }
         });
 
         return {
             types: ["Low", "High"],
-            days: ["\"Today\"", "\"Tomorrow\"", "+2 Days", "+3 Days"],
+            days: this.props.days,
             "High": [errors.high0, errors.high1, errors.high2, errors.high3],
             "Low": [errors.low0, errors.low1, errors.low2, errors.low3],
         };
@@ -65,7 +70,14 @@ class ErrorBarChart extends Component {
     }
 
     componentDidUpdate() {
-        this.createBarChart()
+        this.removeBarChart();
+        this.createBarChart();
+    }
+
+    removeBarChart(){
+        const node = this.node;
+        const svg = d3.select(node);
+        svg.selectAll('*').remove();
     }
 
     createBarChart() {
@@ -100,14 +112,18 @@ class ErrorBarChart extends Component {
         x1.domain(keys).rangeRound([0, x0.bandwidth()]);
         y.domain([0, d3.max(keys, function(key){ return d3.max(errorData[key]) }) ]);
 
-        g.append("g")
+        let gs = g.append("g")
             .selectAll("g")
             .data(errorData.days)
             .enter().append("g")
             .attr("transform", function(d) { return "translate(" + x0(d) + ",0)"; })
+            .attr("class", "day")
             .selectAll("rect")
             .data(function(d, i) { return keys.map(function(key) { return { i:i, key: key, value: errorData[key][i]}; }); })
-            .enter().append("rect")
+            .enter()
+            .append("g");
+
+        gs.append('rect')
             .attr("class", "selectable col")
             .attr("x", function(d) {return x1(d.key); })
             .attr("y", function(d) { return y(d.value); })
@@ -128,6 +144,27 @@ class ErrorBarChart extends Component {
             .on("click", function(d, i){
                 self.props.sendTo('detail/'+d.i+'/'+d.key);
             });
+
+        // Text on columns
+        if(this.props.params) {
+            gs.append("text")
+                .attr("class", "bar")
+                .attr("text-anchor", "right")
+                .attr("y", function (d) {
+                    return x1(d.key) + 21;
+                })
+                .attr("x", function (d) {
+                    return -y(d.value) - 35;
+                })
+                .attr("fill", function (d) {
+                    return z(d.key).darker(2);
+                })
+                .attr("transform", "rotate(-90)")
+                .text(function (d) {
+                    return d.value;
+                });
+        }
+
 
         let bottomAxis = d3.axisBottom(x0);
         let leftAxis = d3.axisLeft(y).ticks(5);
@@ -192,7 +229,16 @@ class ErrorBarChart extends Component {
     }
 
     render() {
-        return <div style={{ minWidth: this.getWidth()+'px' }} className="error-chart chart"><svg ref={node => this.node = node}></svg></div>
+        let info = null;
+        if(this.props.info){
+            info = <Info info={this.props.info} />
+        }
+        return(
+            <div>
+                {info}
+                <div style={{ minWidth: this.getWidth()+'px' }} className="error-chart chart"><svg ref={node => this.node = node}></svg></div>
+            </div>
+        );
     }
 }
 export default ErrorBarChart
