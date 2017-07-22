@@ -9,14 +9,17 @@ import * as d3 from 'd3';
 class ErrorBarChart extends Component {
     constructor(props) {
         super(props);
-
-        this.size = {width:800, height:600};
+        this.size = {width: this.getWidth() , height:600};
         this.margin = {top: 60, right: 90, bottom: 60, left: 60};
 
         this.svgwidth = +this.size.width - this.margin.left - this.margin.right;
         this.svgheight = +this.size.height - this.margin.top - this.margin.bottom;
 
         this.createBarChart = this.createBarChart.bind(this);
+    }
+
+    getWidth(){
+        return (this.props.params ? 400 : 800);
     }
 
     calculateError(){
@@ -103,7 +106,7 @@ class ErrorBarChart extends Component {
             .enter().append("g")
             .attr("transform", function(d) { return "translate(" + x0(d) + ",0)"; })
             .selectAll("rect")
-            .data(function(d, i) { return keys.map(function(key) { return {key: key, value: errorData[key][i]}; }); })
+            .data(function(d, i) { return keys.map(function(key) { return { i:i, key: key, value: errorData[key][i]}; }); })
             .enter().append("rect")
             .attr("class", "selectable col")
             .attr("x", function(d) {return x1(d.key); })
@@ -121,6 +124,9 @@ class ErrorBarChart extends Component {
                 d3.select(this)
                     .attr("style", "stroke-width:1; stroke:" + z(d.key).darker(0.8))
                     .attr("fill", z(d.key));
+            })
+            .on("click", function(d, i){
+                self.props.sendTo('detail/'+d.i+'/'+d.key);
             });
 
         let bottomAxis = d3.axisBottom(x0);
@@ -142,8 +148,8 @@ class ErrorBarChart extends Component {
             .attr("class", "axis axis-y")
             .call(leftAxis)
             .append("text")
-            .attr("x", -this.svgwidth/2 + 25)
-            .attr("y", y(y.ticks().pop()) - 20)
+            .attr("x", -this.svgheight/2 - 80)
+            .attr("y", - 15)
             .attr("fill", "#000")
             .attr("font-weight", "bold")
             .attr("text-anchor", "start")
@@ -186,7 +192,7 @@ class ErrorBarChart extends Component {
     }
 
     render() {
-        return <svg ref={node => this.node = node}></svg>
+        return <div style={{ minWidth: this.getWidth()+'px' }} className="error-chart chart"><svg ref={node => this.node = node}></svg></div>
     }
 }
 export default ErrorBarChart

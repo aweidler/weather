@@ -6,11 +6,18 @@
 html, body, #root, .App{
     height: 100%;
 }
-.App{
+
+.inliner{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+    justify-content: center;
     background-color: #efefef;
 }
 
-.error-chart{
+.chart{
+    background-color: #efefef;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -18,6 +25,42 @@ html, body, #root, .App{
     height: 100%;
     min-height: 600px;
     min-width: 800px;
+    margin: 0 20px;
+}
+
+.chart svg{
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px 2px rgba(0,0,0,0.10);
+    border-radius: 4px;
+}
+
+.line, .dot, .pdot, .pline{
+    clip-path: url(#clip);
+}
+.pdot{
+    pointer-events: none;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 100px;
+    padding: 3px;
+    color: black;
+    background: #efefef;
+    font-size: 10pt;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
+.zoom {
+    cursor: move;
+    fill: none;
+    pointer-events: all;
+}
+
+.selectable{
+    cursor: pointer;
 }
 
 .bar {
@@ -36,11 +79,25 @@ html, body, #root, .App{
     display: none;
 }
 
-.error-chart svg{
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 5px 2px rgba(0,0,0,0.10);
+button{
+    font-size: 12pt;
+    font-family: 'Source Sans Pro', sans-serif;
+    background-color: rgb(173, 173, 173);
     border-radius: 4px;
-}
-.selectable{
+    border: 1px solid rgb(99, 99, 99);
+    display: inline-block;
     cursor: pointer;
+    color: rgb(255, 255, 255);
+    padding: 10px 20px;
+    text-decoration: none;
+    text-shadow: rgb(122, 122, 122) 0px 1px 12px;
+    outline: none;
+}
+button:hover {
+    background-color: #bababa;
+}
+button:active {
+    position: relative;
+    top: 1px;
+    outline: none;
 }
