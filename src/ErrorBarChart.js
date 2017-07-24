@@ -161,7 +161,7 @@ class ErrorBarChart extends Component {
                 })
                 .attr("transform", "rotate(-90)")
                 .text(function (d) {
-                    return d.value;
+                    return d.value ? d.value : "";
                 });
         }
 

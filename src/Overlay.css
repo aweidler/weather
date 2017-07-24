@@ -1,8 +1,8 @@
 .overlay{
     width: 100%;
-    position: fixed;
     z-index: 100;
 
+    min-height: 600px;
     height: 100%;
     overflow: hidden;
     display: flex;
@@ -21,7 +21,38 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffa9a5', endColorstr='#9bd5f2',GradientType=0 );
 }
 
+.overlay ul{
+    list-style: none;
+    margin: 10px auto;
+}
+
+.overlay ul > li{
+    width: 250px;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.overlay ul > li button{
+    width: 100%;
+}
+
+.overlay ul > li h2{
+    font-size: 14pt;
+    margin: 0;
+    padding: 0;
+}
+
+.overlay ul > li label{
+    color: #ddd;
+    width: 100%;
+    display: block;
+    text-align: right;
+    cursor: pointer;
+}
+
 .overlay > div{
+    position: relative;
+    width: 800px;
     max-width: 800px;
     min-height: 600px;
     display: flex;
@@ -49,6 +80,11 @@
     margin-top: 20px;
 }
 
+.overlay .buttons button{
+    margin: 0 10px;
+}
+
 .overlay blockquote{
-    text-align: center;
+    text-align: justify;
+    line-height: 1.2em;
 }

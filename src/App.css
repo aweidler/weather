@@ -30,6 +30,7 @@ html, body, #root{
     text-align: center;
     height: 30px;
     position: fixed;
+    z-index: 100;
 }
 
 .navigation .title{
@@ -109,6 +110,26 @@ html, body, #root{
     display: inline-block;
 }
 
+.inliner .detail-nav{
+    height: 50px;
+    width: 800px;
+    display: block;
+    margin: auto;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.inliner .detail-nav button:last-child{
+    position: absolute;
+    right: 0;
+}
+
+.inliner .detail-nav button:first-child{
+    position: absolute;
+    left: 0;
+}
+
 .chart{
     text-align: center;
     align-items: center;
@@ -168,7 +189,7 @@ div.tooltip {
     display: none;
 }
 
-button{
+button, .button{
     font-size: 12pt;
     font-family: 'Source Sans Pro', sans-serif;
     background-color: rgb(173, 173, 173);
@@ -182,10 +203,10 @@ button{
     text-shadow: rgb(122, 122, 122) 0px 1px 12px;
     outline: none;
 }
-button:hover {
+button:hover, .button:hover{
     background-color: #bababa;
 }
-button:active {
+button:active, .button:active {
     position: relative;
     top: 1px;
     outline: none;

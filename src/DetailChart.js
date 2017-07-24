@@ -18,7 +18,7 @@ class DetailChart extends Component{
         this.svgheight = +this.size.height - this.margin.top - this.margin.bottom;
         this.subsvgheight = +this.size.height - this.submargin.top - this.submargin.bottom;
 
-        this.brush = [0, 50];
+        this.brush = [1, this.svgwidth-1];
         this.animate = true;
         this.brusher = null;
     }
@@ -193,9 +193,9 @@ class DetailChart extends Component{
 
         if(this.animate) {
             this.brusher.transition()
-                .duration(60000)
-                .ease(d3.easeLinear)
-                .call(brush.move, [0, this.svgwidth]);
+                .duration(2300)
+                .ease(d3.easeQuadInOut)
+                .call(brush.move, [20, 100]);
             this.animate = false;
         }
 

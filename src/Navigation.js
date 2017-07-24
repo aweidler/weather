@@ -7,6 +7,7 @@ var PAGES = {
     detail: 'detail',
     overview: 'overview',
     front: 'front',
+    city: 'city',
 };
 
 class Navigation extends Component{
@@ -26,8 +27,16 @@ class Navigation extends Component{
         return (
             <nav className="navigation">
                 <div className="title">{this.props.title}</div>
-                <a onClick={() => this.props.sendTo(PAGES.front)}
-                   className={this.getName(PAGES.front)} ><i className={"fa " + this.getIcon(PAGES.front)} aria-hidden="true"></i></a>
+                { this.props.martini &&
+                    <a onClick={() => this.props.sendTo(PAGES.city)}
+                        className={this.getName(PAGES.city)} ><i className={"fa " + this.getIcon(PAGES.city)} aria-hidden="true"></i></a>
+                }
+
+                { !this.props.martini &&
+                    <a onClick={() => this.props.sendTo(PAGES.front)}
+                        className={this.getName(PAGES.front)} ><i className={"fa " + this.getIcon(PAGES.front)} aria-hidden="true"></i></a>
+                }
+
                 <a onClick={ () => this.props.sendTo(PAGES.overview)}
                    className={this.getName(PAGES.overview)}><i className={"fa " + this.getIcon(PAGES.overview)} aria-hidden="true"></i></a>
 

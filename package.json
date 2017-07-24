@@ -2,6 +2,7 @@
   "name": "weather",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://austinweidler.com/forecasts",
   "dependencies": {
     "normalize.css": "^7.0.0",
     "react": "^15.6.1",
